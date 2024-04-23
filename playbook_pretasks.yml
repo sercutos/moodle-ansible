@@ -1,0 +1,58 @@
+---
+# playbook_pretasks.yml
+- name: Tareas Previas
+  hosts: localhost
+  vars_files:
+    - vars/main.yml
+  
+  pre_tasks:
+    - name: AutoRemove dependencies that are no longer required
+      apt:
+        autoclean: yes
+        autoremove: yes
+      register: output
+
+    - name: update repo cache (Debian/Ubuntu)
+      tags: always
+      apt:
+        update_cache: yes
+      changed_when: False
+      when: ansible_distribution == "Debian"
+
+    - name: upgrade system (Debian/Ubuntu)      
+      apt:
+        upgrade: yes
+      changed_when: False
+      when: ansible_distribution == "Debian"
+      
+    - name: Instalar Paquetes APT
+      apt :
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      with_items: "{{lista_paquetes}}"
+
+    - name: Add  alias for ansible user
+      lineinfile:
+        path: /home/{{user_name}}/.bashrc
+        line: "alias ll='ls -l'"
+        owner: "{{user_name}}"
+        regexp: "^#alias ll='ls -l'$"
+        state: present
+        insertafter: EOF
+        create: True
+
+    - name: source bashrc
+      shell: . /home/{{user_name}}/.bashrc
+      args:
+        executable: /bin/bash
+
+    - name: setup timezone
+      timezone:
+        name: "{{ timezone }}"
+        
+    - name: Display changes
+      debug:
+        msg: "{{ output.stdout_lines }}"
+      when: verbose or updated is defined
+...

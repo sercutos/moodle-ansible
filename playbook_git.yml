@@ -1,0 +1,111 @@
+---
+############################
+# Install Moodle platform  #
+############################
+  - name: "Installing MOODLE Platform"
+    hosts: localhost
+    connection: local 
+    vars_files:
+      - vars/main.yml   
+
+    tasks:     
+      
+      - name: Check directory of Moodle
+        stat: path={{ moodle_dir }}
+        register: directorio    
+
+      - name: Check folder TMP
+        stat: path={{ folder_moodle_download }}
+        register: directorio_tmp  
+
+      - name: Clone moodle from github repository (SLOW)
+        become: true
+        become_user: root
+        ansible.builtin.git:
+          repo: https://github.com/moodle/moodle.git
+          dest: "{{ folder_moodle_download }}"
+          single_branch: yes
+          version: MOODLE_403_STABLE
+        when: not directorio_tmp.stat.exists
+
+      - name: Copy folder from tmp and put permissions needed
+        ansible.builtin.copy:
+          owner: "{{ moodle_dir_owner }}" 
+          group: "{{ moodle_dir_group }}" 
+          mode: "{{ moodle_dir_permissions_dirs }}"          
+          src: "{{ folder_moodle_download }}"
+          dest: "{{ document_root }}"
+        when: not directorio.stat.exists
+
+      - name: DELETE folder tmp
+        ansible.builtin.file:
+          path: "{{ folder_moodle_download }}"
+          state: absent
+        when: directorio.stat.exists
+
+      # Preparing folder moodledata
+      - name: Comprobar directorio moodledata
+        stat: path={{ moodle_data }}
+        register: directorio_moodeldata
+
+      - name: Crear directorio de datos moodle_data
+        file: path={{ moodle_data }}
+          state=directory recurse=yes
+          owner={{ moodle_data_owner }} group={{ moodle_data_group }} mode={{ moodle_data_permissions_dirs }}
+        when: not directorio_moodeldata.stat.exists  
+
+      - name: Configurar permisos de la aplicación web
+        command: find {{ moodle_dir }} -type f -exec chmod {{ moodle_dir_permissions_files }} {} \;
+        when: not directorio.stat.exists
+      ###################  
+      # Setup Database  #
+      ###################  
+      - name: Create DataBase
+        mysql_db: name={{ db_name }} state=present
+
+      - name: Create user and grant privileges of DB
+        mysql_user: name={{ db_user }} password={{ db_pass }} priv={{ db_name }}.*:ALL state=present
+      ############################################
+      # Intall MOODLE: Create  config.php file   #
+      ############################################
+      - name: Install Moodle
+        command: >
+          php admin/cli/install.php
+          --lang=es
+          --wwwroot='{{ moodle_wwwroot }}'
+          --dataroot='{{ moodle_data }}'
+          --dbtype=mariadb
+          --dbhost=localhost
+          --dbname='{{ db_name }}'
+          --dbuser='{{ db_user }}'
+          --dbpass='{{ db_pass }}'
+          --adminuser='{{ moodle_admin }}'
+          --adminpass='{{ moodle_password }}'
+          --fullname='{{ moodle_sitefullname }}'
+          --shortname='{{ moodle_siteshortname }}'          
+          --non-interactive          
+          --agree-license
+          --adminemail='{{ moodle_email }}'
+          --summary='{{ moodle_sitesummary }}'
+          
+          
+        args:
+          chdir: "{{ moodle_dir }}"
+          creates: config.php
+
+      - name: Put correct permissions in config.php
+        file: path={{ moodle_dir }}/config.php
+          owner={{ moodle_dir_owner }} group={{ moodle_dir_group }} mode={{ moodle_dir_permissions_files }}
+      
+      - name: Custom config.php file
+        lineinfile:
+          dest: "{{ moodle_dir }}/config.php"
+          line: "$CFG->{{ item.name }} = '{{ item.value }}';"
+          insertbefore: "^require_once"
+        with_items: "{{ moodle_config_php_options }}"
+  
+  
+    handlers:
+      - import_tasks: handlers/main.yml
+...         
+

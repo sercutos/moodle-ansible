@@ -1,0 +1,145 @@
+---
+############
+# PRE_TAKS #
+############
+lista_paquetes:
+  - vim
+  - aptitude
+  - locate
+  - htop
+  - graphviz 
+  - aspell 
+  - ghostscript 
+  - clamav
+  - git
+user_name: test
+required_distribution: "Debian"
+#verbose: false
+verbose: true
+# timedatectl
+timezone: "Africa/Mogadishu"
+
+#########
+# MYSQL #
+#########
+mysql_databases:
+  - name: moodle
+    encoding: utf8
+    collation: utf8_unicode_ci
+mysql_users:
+  - name: moodle
+    host: "%"
+    password: moodle
+    priv: "moodle.*:ALL"
+
+##########
+# Apache #
+##########
+server_name: "webserver"
+server_admin: "admin_moodle@test.eu"
+document_root: "/var/www/html/moodle/"
+
+apache_sites:
+  - server_name: "{{ server_name }}"
+    server_admin: "{{ server_admin }}"
+    document_root: "{{ document_root }}"
+####################
+# Variables to GIT #
+####################
+folder_moodle_download: /tmp/moodle/ 
+
+###################
+# Install  MOODLE #
+###################
+# DataBase
+db_name: "moodle"
+db_user: "moodle"
+db_pass: "moodle"
+db_create_tables: yes
+# The version of moodle to install.
+#moodle_version: 401
+#moodle_version: MOODLE_403_STABLE
+# A path where to save the data.
+moodle_data_directory: /opt/moodledata
+# The permissions of the created directories.
+moodle_directory_mode: "0750"
+# DATABASE
+moodle_database_type: mysql #mysqli / mariadb
+moodle_database_hostname: localhost
+moodle_database_name: moodle
+moodle_database_username: moodle
+moodle_database_password: moodle
+moodle_database_prefix: ""
+
+# The URL where to serve content.
+moodle_wwwroot: "https://{{ ansible_default_ipv4.address }}/moodle"
+# Folder Moodle
+#moodle_dir: "/var/www/moodle"
+moodle_dir: "/var/www/html/moodle"
+moodle_dir_owner: "root"
+moodle_dir_group: "root"
+moodle_dir_permissions_dirs: "0755"
+moodle_dir_permissions_files: "0644"
+
+moodle_data: "/var/moodledata"
+moodle_data_owner: "www-data"
+moodle_data_group: "www-data"
+moodle_data_permissions_dirs: "0700"
+moodle_data_permissions_files: "0600"
+
+# Setup Platform
+moodle_hostname: "127.0.0.1"
+#moodle_wwwroot: "http://{{ moodle_hostname }}/moodle"
+moodle_admin: "admin"
+moodle_password: "Moodle2024!"
+moodle_email: "{{ server_admin }}"
+moodle_norepy: "noreply@example.com"
+
+moodle_sitefullname: "Moodle Test"
+moodle_siteshortname: "MOODLE"
+moodle_sitesummary: "<p>e-learning space</p>"
+
+moodle_config_php_options:
+  - name: 'wwwroot'
+    value: "http://' . (isset($_SERVER['HTTP_HOST'])?$_SERVER['HTTP_HOST']:'127.0.0.1') . '/moodle"
+  - name: 'lang'
+    value: 'es'
+  - name: 'dbtype'
+    value: 'mariadb'
+
+moodle_version: 4.3 
+moodle_langdir: "es"
+#####################################################
+# PHP SETUP /etc/php/8.2/apache2/php.ini            #
+# PHP 8.3 versions PHP 8.3 and upper not supported  #
+# update-alternatives --config php                  #
+#####################################################
+php_memory_limit: "128M"
+php_max_execution_time: "90"
+php_upload_max_filesize: "256M"
+php_post_max_size: "20M"
+php_session.save_handler: "files"
+php_session.auto_start: "0"
+php_file_uploads: "On"
+php_upload_tmp_dir: '/tmp'
+php_max_input_vars: "5000"
+php_packages:
+  - php8.2
+  - php8.2-gd
+  - php8.2-mbstring
+  - php-xml
+  - php8.2-soap
+  - php8.2-mysqli
+  - php8.2-ctype
+  - php8.2-dom
+  - php8.2-iconv
+  - php8.2-intl
+  - php-json
+  - php-composer-pcre
+  - php8.2-simplexml
+  - php8.2-zip
+  - php8.2-curl  
+  - php8.2-xmlreader
+  - php8.2-fileinfo
+#------------------------------
+...

@@ -1,0 +1,11 @@
+---
+# ansible-role-php
+# ansible-galaxy role install geerlingguy.php
+
+- name: Install and setup PHP
+  hosts: localhost
+  vars_files:
+    - vars/main.yml
+  roles:
+    - { role: geerlingguy.php }
+...

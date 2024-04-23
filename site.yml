@@ -1,0 +1,8 @@
+---
+# file: site.yml
+- import_playbook: playbook_pretasks.yml
+- import_playbook: playbook_mysql.yml
+- import_playbook: playbook_apache.yml
+- import_playbook: playbook_php.yml
+- import_playbook: playbook_git.yml
+...
